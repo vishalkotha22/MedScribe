@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedScribe</title>
+    <!-- Import Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Import MUI Core CSS -->
+    <link rel="stylesheet" href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css">
+    <!-- Import Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Additional CSS styles */
+        body {
+            background-color: #f3f3f3; /* Light grey background color */
+        }
+
+        #outputText {
+            margin-top: 20px;
+        }
+
+        /* Green shade for the navbar */
+        nav {
+            background-color: #4CAF50; /* Green shade */
+        }
+
+        /* Center the text in the navbar */
+        nav .nav-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Add spacing between navbar and file upload button */
+        .file-upload-container {
+            padding-top: 20px;
+        }
+
+        /* Green shade for buttons */
+        .btn, .mui-btn {
+            background-color: #4CAF50 !important; /* Green shade */
+        }
+
+        /* Style for the rectangular button */
+        .rectangular-btn {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px; /* Added margin to move the button down */
+            position: relative; /* Added for the typing animation */
+        }
+
+        /* About section */
+        #aboutSection {
+            padding-top: 20px;
+            display: block;
+            text-align: center;
+            font-size: 18px;
+            display: none; /* Hide initially */
+        }
+
+        /* Container for centering the button */
+        .center-container {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Typing animation */
+        .typing-animation {
+            overflow: hidden;
+            white-space: nowrap;
+            width: 0;
+            animation: typing 2s steps(20) infinite;
+        }
+
+        @keyframes typing {
+            from {
+                width: 0;
+            }
+
+            to {
+                width: 100%;
+            }
+        }
+
+        /* Styling for the Welcome text */
+        #welcomeText {
+            font-size: 24px; /* Adjust font size as needed */
+            font-family: 'Roboto', sans-serif; /* Apply Google Font */
+            font-weight: 700; /* Bold font weight */
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav>
+        <div class="nav-wrapper">
+            <span class="brand-logo center">MedScribe</span>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <div class="container">
+        <!-- About button -->
+        <div class="row">
+            <div class="col s12 center-container">
+                <button class="rectangular-btn" id="aboutButton">
+                    <span class="typing-animation" id="aboutText">About MedScribe</span> <!-- Typing animation -->
+                    <p id="aboutSection">This is the place for your about information.</p>
+                </button>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s12 center-container">
+                <button class="rectangular-btn" id="infoButton">
+                    
+                    <p id="welcomeText">Welcome to MedScribe we are happy to help bridge the diversity/language barrier gap in 
+                        clinical studies by providing our users with the ability to easily translate their clinical
+                        trial documents. After uploading the output box below shows original text, translated text, and 
+                        a translated summary (in that order). 
+                    </p>
+                </button>
+            </div>
+        </div>
+
+        <div class="row file-upload-container">
+            <form id="uploadForm" class="col s12">
+                <div class="file-field input-field">
+                    <div class="btn">
+                        <span>File</span>
+                        <input type="file" id="fileInput" name="file" accept=".txt">
+                    </div>
+                    <div class="file-path-wrapper">
+                        <input class="file-path validate" type="text">
+                    </div>
+                </div>
+                <button class="btn waves-effect waves-light" type="submit">
+                    Upload
+                </button>
+                <div class="input-field col s12">
+                    <input id="inputLanguage" type="text" class="validate" name="InputL">
+                    <label for="inputLanguage">Input Language</label>
+                </div>
+                <div class="input-field col s12">
+                    <input id="outputLanguage" type="text" class="validate" name="OutputL">
+                    <label for="outputLanguage">Output Language</label>
+                </div>
+            </form>
+        </div>
+        <div class="row">
+            <div class="col s12">
+                <div id="outputText" class="card blue-grey darken-1">
+                    <div class="card-content white-text">
+                        <span class="card-title">Output</span>
+                        <div id="outputContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <!-- Import MUI Core JavaScript -->
+    <script src="https://cdn.muicss.com/mui-0.10.3/js/mui.min.js"></script>
+    <script>
+        // JavaScript code to handle form submission and update output dynamically
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.getElementById('uploadForm');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent default form submission
+
+                // Get the file input element
+                var fileInput = document.getElementById('fileInput');
+
+                // Check if a file is selected
+                if (fileInput.files.length > 0) {
+                    var file = fileInput.files[0];
+                    var reader = new FileReader();
+
+                    reader.onload = function(event) {
+                        var fileContent = event.target.result;
+
+                        // Get form data
+                        var formData = new FormData(form);
+                        formData.append('fileContent', fileContent);
+
+                        // Perform AJAX request to server
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('POST', '/upload', true);
+                        xhr.onreadystatechange = function() {
+                            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                                // Update output content with the response (HTML)
+                                document.getElementById('outputContent').innerHTML = xhr.responseText;
+                            }
+                        };
+                        xhr.send(formData);
+                    };
+
+                    // Read file as text
+                    reader.readAsText(file);
+                }
+            });
+
+            // Typing animation for About button
+            var aboutText = document.getElementById('aboutText');
+            var languages = ['About MedScribe', 'A propos de MedScribe', 'Über MedScribe', 'Sobre MedScribe']; // Add more languages as needed
+            var currentLanguageIndex = 0;
+            setInterval(function() {
+                aboutText.textContent = languages[currentLanguageIndex];
+                currentLanguageIndex = (currentLanguageIndex + 1) % languages.length;
+            }, 8000); // Change the interval as needed (milliseconds)
+        });
+    </script>
+</body>
+
+</html>
